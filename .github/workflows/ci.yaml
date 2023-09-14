@@ -1,0 +1,20 @@
+name: easy2use-ci
+ 
+on:
+  push:
+  pull_request:
+    branches: [ ci-trial ]
+ 
+jobs:
+  build:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Say Hi!
+        run: |
+             echo "Hi, Eiffel!"
+
+      - name: Kubernetes Version
+        run: |
+             kubectl version
