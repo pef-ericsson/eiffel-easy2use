@@ -1,9 +1,12 @@
 name: easy2use-ci
  
-on:
+on: 
   push:
+    branches:
+      - ci-trial
   pull_request:
-    branches: [ ci-trial ]
+    branches:
+      - ci-trial
  
 jobs:
   build:
@@ -11,10 +14,22 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Say Hi!
-        run: |
-             echo "Hi, Eiffel!"
-
       - name: Kubernetes Version
         run: |
-             kubectl version
+              kubectl version
+
+      - name: Install Easy2Use on cluster
+        run: |
+              kubectl create ns ci-eiffel
+              ./easy2use start -t Kubernetes -d cluster.local -e ./bundles -n ci-eiffel Eiffel -y
+              sleep 10
+
+      - name: List the Eiffel pods
+        run: |
+              kubectl get pods -n ci-eiffel
+
+      - name: Remove Easy2Use from cluster
+        run: |
+              ./easy2use remove -t Kubernetes -d cluster.local -e ./bundles -n ci-eiffel Eiffel -y
+              kubectl delete ns ci-eiffel
+
