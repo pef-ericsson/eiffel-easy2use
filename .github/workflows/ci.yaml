@@ -7,6 +7,11 @@ on:
   pull_request:
     branches:
       - ci-trial
+
+env:
+  NAMESPACE: ci-eiffel
+  BUNDLE: Eiffel
+  READY_POD_TIMEOUT: 120s
  
 jobs:
   build:
@@ -16,20 +21,35 @@ jobs:
 
       - name: Kubernetes Version
         run: |
+              : # Get kubectl version
               kubectl version
 
       - name: Install Easy2Use on cluster
         run: |
-              kubectl create ns ci-eiffel
-              ./easy2use start -t Kubernetes -d cluster.local -e ./bundles -n ci-eiffel Eiffel -y
-              sleep 10
+              : # Create the NAMESPACE
+              kubectl create ns $NAMESPACE 
+
+              : # Install the BUNDLE via easy2use
+              ./easy2use start -t Kubernetes -d cluster.local -e ./bundles -n $NAMESPACE $BUNDLE -y
+
+              : # Wait until all pods are running
+              kubectl wait pod \
+              --all \
+              --for=condition=Ready \
+              --namespace=$NAMESPACE \
+              --timeout=$READY_POD_TIMEOUT
+
+              : # Get all ingresses
+              kubectl get ingress -n $NAMESPACE
 
       - name: List the Eiffel pods
         run: |
-              kubectl get pods -n ci-eiffel
+              kubectl get pods -n $NAMESPACE
 
       - name: Remove Easy2Use from cluster
         run: |
-              ./easy2use remove -t Kubernetes -d cluster.local -e ./bundles -n ci-eiffel Eiffel -y
-              kubectl delete ns ci-eiffel
+              : # Remove the BUNDLE from the cluster via easy2use
+              ./easy2use remove -t Kubernetes -d cluster.local -e ./bundles -n $NAMESPACE $BUNDLE -y
 
+              : # Delete the NAMESPACE
+              kubectl delete ns $NAMESPACE
