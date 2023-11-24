@@ -25,6 +25,7 @@ jobs:
               kubectl version
 
       - name: Install Easy2Use on cluster
+        id: installation
         run: |
               : # Create the NAMESPACE
               kubectl create ns $NAMESPACE 
@@ -36,11 +37,13 @@ jobs:
               kubectl wait pod \
               --all \
               --for=condition=Ready \
-              --field-selector=status.phase=Running \
+              --field-selector=status.phase=Running,status.phase=Succeeded \
               --namespace=$NAMESPACE \
               --timeout=$READY_POD_TIMEOUT
 
               : # Check that the mongodb seed job is completed
+              : # Sleep for a while giving some time to the job
+              sleep 10
               completed_job=$(kubectl get pod \
               --field-selector=status.phase=Succeeded \
               -n $NAMESPACE | grep "mongodb-seed-*" | wc -l)
@@ -56,6 +59,8 @@ jobs:
               kubectl get ingress -n $NAMESPACE
 
       - name: Remove Easy2Use from cluster
+        id: removal
+        if: always()
         run: |
               : # Remove the BUNDLE from the cluster via easy2use
               ./easy2use remove -t Kubernetes -d cluster.local -e ./bundles -n $NAMESPACE $BUNDLE -y
