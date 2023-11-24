@@ -37,7 +37,7 @@ jobs:
               kubectl wait pod \
               --all \
               --for=condition=Ready \
-              --field-selector=status.phase=Running,status.phase=Succeeded \
+              --field-selector=status.phase=Running,metadata.name!=mongodb-seed-* \
               --namespace=$NAMESPACE \
               --timeout=$READY_POD_TIMEOUT
 
