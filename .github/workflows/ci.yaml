@@ -36,15 +36,24 @@ jobs:
               kubectl wait pod \
               --all \
               --for=condition=Ready \
+              --field-selector=status.phase=Running \
               --namespace=$NAMESPACE \
               --timeout=$READY_POD_TIMEOUT
 
-              : # Get all ingresses
-              kubectl get ingress -n $NAMESPACE
+              : # Check that the mongodb seed job is completed
+              completed_job=$(kubectl get pod \
+              --field-selector=status.phase=Succeeded \
+              -n $NAMESPACE | grep "mongodb-seed-*" | wc -l)
 
-      - name: List the Eiffel pods
+              if [[ $completed_job -ne 1 ]]; then
+                  echo "MongoDB seed job was not completed successfully."
+                  exit 1
+              fi
+
+      - name: List the Eiffel pods and ingresses
         run: |
               kubectl get pods -n $NAMESPACE
+              kubectl get ingress -n $NAMESPACE
 
       - name: Remove Easy2Use from cluster
         run: |
