@@ -38,7 +38,7 @@ jobs:
               --all \
               --for=condition=Ready \
               --field-selector=status.phase=Running \
-              --selector job-name!=mongnodb-seed \
+              --selector job-name!=mongodb-seed \
               --namespace=$NAMESPACE \
               --timeout=$READY_POD_TIMEOUT
 
