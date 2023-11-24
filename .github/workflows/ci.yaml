@@ -37,21 +37,16 @@ jobs:
               kubectl wait pod \
               --all \
               --for=condition=Ready \
-              --field-selector=status.phase=Running,metadata.name!=mongodb-seed-* \
+              --field-selector=status.phase=Running \
+              --selector job-name!=mongnodb-seed \
               --namespace=$NAMESPACE \
               --timeout=$READY_POD_TIMEOUT
 
               : # Check that the mongodb seed job is completed
-              : # Sleep for a while giving some time to the job
-              sleep 10
-              completed_job=$(kubectl get pod \
-              --field-selector=status.phase=Succeeded \
-              -n $NAMESPACE | grep "mongodb-seed-*" | wc -l)
-
-              if [[ $completed_job -ne 1 ]]; then
-                  echo "MongoDB seed job was not completed successfully."
-                  exit 1
-              fi
+              kubectl wait \
+              --for=condition=complete \
+              --namespace=$NAMESPACE \
+              job/mongodb-seed
 
       - name: List the Eiffel pods and ingresses
         run: |
